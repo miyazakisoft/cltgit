@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/miyazakisoft/dot_comparison.svg?branch=master)](https://travis-ci.org/miyazakisoft/dot_comparison)
+[![Build Status](https://travis-ci.org/miyazakisoft/githubapp.svg?branch=master)](https://travis-ci.org/miyazakisoft/githubapp)
 
 ![9rulesResult](http://13.114.29.225/9rulesServer/01.png "サンプル")
 

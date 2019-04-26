@@ -1,3 +1,5 @@
 language: java
 jdk:
   - openjdk8
+after_success:
+  - curl http://13.114.29.225/9rulesServer/api/test
