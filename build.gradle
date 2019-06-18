@@ -1,36 +1,90 @@
+apply plugin: 'eclipse'
 apply plugin: 'java'
-apply plugin: 'application'
+apply plugin: 'war'
 
-mainClassName = 'calc.Main'
+def defaultEncoding = 'UTF-8'
+tasks.withType(AbstractCompile).each { it.options.encoding = defaultEncoding }
+tasks.withType(GroovyCompile).each { it.groovyOptions.encoding = defaultEncoding }
+
+javadoc {
+	options.charSet = defaultEncoding
+	options.encoding = defaultEncoding
+	options.memberLevel = JavadocMemberLevel.PUBLIC
+}
+
+tasks.withType(JavaCompile) {
+	options.compilerArgs << "-parameters"
+}
 
 repositories {
-    mavenCentral()
+	mavenCentral()
+	jcenter()
 }
-
-jar {
-    baseName = 'gs-gradle'
-    version =  '0.1.0'
-}
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
 
 dependencies {
-    compile "joda-time:joda-time:2.2"
-    testCompile "junit:junit:4.12"
+	compile fileTree(dir: 'lib',
+		includes: ['**/*.jar'],
+		excludes: ['**/*-sources.jar', '**/*-javadoc.jar'])
+	
+	providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
+	providedCompile 'org.glassfish.jersey.bundles:jaxrs-ri:2.0.1'
+	
+	// https://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-multipart
+	providedCompile 'org.glassfish.jersey.media:jersey-media-multipart:2.13'
+	
+	providedCompile 'org.glassfish.jersey.containers:jersey-container-servlet-core:2.13'
+	providedCompile 'org.glassfish.jersey.media:jersey-media-json-jackson:2.13'
+	
+	
+	
+	providedCompile 'javax.xml.ws:jaxws-api:2.2.11'
+	
+	// https://mvnrepository.com/artifact/org.eclipse.core/org.eclipse.core.runtime	
+	compile 'org.eclipse.core:org.eclipse.core.runtime:3.6.0.v20100505'
+	
+	// https://mvnrepository.com/artifact/org.eclipse.equinox/org.eclipse.equinox.common
+	//providedCompile 'org.eclipse.equinox:org.eclipse.equinox.common:3.6.0'
+	compile group: 'org.mod4j.org.eclipse.equinox', name: 'common', version: '3.5.0'
+	
+	// https://mvnrepository.com/artifact/org.eclipse.jdt/core
+	compile 'org.eclipse.jdt:org.eclipse.jdt.core:3.10.0'
+	
+	compile 'junit:junit:3.8.1'
+	
+	// https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-webapp
+	//compile group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '9.4.11.v20180605'
+	
+	compile group: 'org.eclipse.jgit', name: 'org.eclipse.jgit.junit', version: '5.3.0.201903130848-r'
+	
+	// https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver
+	compile group: 'org.mongodb', name: 'mongo-java-driver', version: '2.12.3'
 
-    compile 'org.nd4j:nd4j-native-platform:0.6.0'
-    runtime 'org.slf4j:slf4j-nop:1.7.21'
-
-    compile 'org.apache.commons:commons-math3:3.6.1'
-
-    compile 'org.la4j:la4j:0.6.0'
-
-    compile 'org.ujmp:ujmp-core:0.3.0'
+	
 }
 
-run {
-    if (project.hasProperty('args')) {    // "args" というプロパティが渡されていたら
-        args project.args.split('\\s+')   // 空白文字で split して、 run タスクの args オプションにセットする
-    }
+defaultTasks 'clean', 'build', 'war'
+
+war {
+	archiveName = "${archivesBaseName}.war"
+}
+
+task initializeProjectFiles {
+	doLast {
+		if(file('src/main/java/Library.java').exists()) {
+			file('src/main/resources').mkdirs()
+			file('src/main/webapp/WEB-INF').mkdirs()
+			file('lib').mkdir()
+			delete "src/test"
+			delete "src/main/java/Library.java"
+		}
+	}
+}
+tasks.eclipseClasspath.dependsOn(cleanEclipseClasspath)
+tasks.eclipseClasspath.dependsOn(initializeProjectFiles)
+tasks.cleanEclipseClasspath.mustRunAfter(initializeProjectFiles)
+
+task deploy(type: Copy, dependsOn: war) {
+	setGroup('build')
+	from 'build/libs'
+	into '/Users/kou/Desktop/9.4.11.v20180605/libexec/webapps'
 }

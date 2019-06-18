@@ -1,0 +1,449 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+
+<meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="body.css">
+<script type="text/javascript" src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+
+<title>9rulesAPIの仕様</title>
+</head>
+  <body>
+
+    <!-- コンテナ開始 -->
+    <div id="container">
+
+
+      <!-- ヘッダ開始 -->
+      <div id="header">
+          <p><b><font size="5">9rulesAPIの仕様</font></b></p>
+          　9rulesAPIは、Javaファイルの中身が9つのルールに遵守してプログラミングされているかどうかを検証するHTTPベースのAPIです。このガイドでは、9rulesAPIでそれらのタスクを実行する方法について説明します。
+            9rulesAPIは、<A Href="https://github.com/tamada/9rules">9rules</A>（本元）に基づいて開発しています。
+      </div>
+      <!-- ヘッダ終了 -->
+
+      <!-- コンテンツ開始 -->
+      <div id="content">
+        <div id="subtitle"><p><b><font size="5">はじめに</font></b></p></div>
+          　9rulesとはSmall Object Programmingで定められた9つのルールに従っているかを確認することで、
+          ソースコードの品質を測定するツールのことです。具体的なルールは次に示します。
+
+          <ul>
+            <li>1つのメソッドにつき，インデントは一段階とすること
+            <li>else句を使用しないこと
+            <li>すべてのプリイティブ型と文字列型をラップすること
+            <li>１行につき，ドットは１つまでにすること
+            <li>名前を省略しないこと
+            <li>すべてのエンティティを小さくすること
+              <ul>
+                <li>1クラスは50行まで
+                <li>1メソッドは3行まで
+                <li>1つのパッケージには10ファイルまで
+              </ul>
+            <li>１つのクラスにつき，インスタンス変数は２つまでにすること
+            <li>ファーストクラスコレクションを使用すること
+            <li>Getter，Setter，プロパティを使用しないこと
+          </ul>
+
+        　ここでは、9rulesをHTTPベースで利用する方法について説明します。
+
+
+        <div id="subtitle"><p><b><font size="5">要求</font></b></p></div>
+
+        9rulesAPIを利用するには次のように要求する必要があります。
+        <table border=1>
+          <tr><td>Method</td><td>POST</td></tr>
+          <tr><td>RequestURL</td><td>http://35.225.103.99/9rules/webapi/validators/</td></tr>
+          <tr><td>HOST</td><td>35.225.103.99</td></tr>
+          <tr><td>Content-Type:</td><td>multipart/form-data;</td></tr>
+          <tr><td>※Content-Disposition:</td><td>form-data; name="file"; filename="○○○.java"</td></tr>
+        </table>
+        ※Content-Dispositionのfilenameは、検証するファイル名が入ります。<br>　但し、拡張子はjavaかzipである必要があります。
+
+        <p><b><font size="4">利用例</font></b></p>
+        利用例を以下に示します。
+        <ul>
+        <li>htmlで検証ファイルを送信する場合
+        <pre class="prettyprint">
+&lt;form enctype="multipart/form-data" method="post" action="http://35.225.103.99/9rules/webapi/validators/"&gt;
+  &lt;input type="file" name="file" multiple="multiple"/&gt;
+  &lt;input type="submit" value="Verification"&gt;
+&lt;/form&gt;</pre>
+
+<li>コマンドライン（curlコマンド）で検証ファイルを送信する場合
+    <ul>
+      <li>形式
+        <pre class="prettyprint">
+curl -F "file=@XXX" http://35.225.103.99/9rules/webapi/validators/</pre>
+        XXXには検証させるファイルPathが入ります。
+      <li>例
+        <pre class="prettyprint">
+curl -F "file=@./sample.zip" http://35.225.103.99/9rules/webapi/validators/</pre>
+    </ul>
+</ul>
+
+        <div id="subtitle"><p><b><font size="5">応答</font></b></p></div>
+              要求に成功すると次のように応答されます。
+              <table border=1>
+                <tr><td>Request URL</td><td>http://35.225.103.99/9rules/webapi/validators/</td></tr>
+                <tr><td>Request Method</td><td>POST</td></tr>
+                <tr><td>Status Code</td><td>200</td></tr>
+                <tr><td>Remote Address</td><td>35.225.103.99:80</td></tr>
+                <tr><td>※Content-Type</td><td>application/json</td></tr>
+              </table>
+              ※Content-Typeのapplication/jsonについては以下のjsonフォーマットを参考してください。
+
+            <br><br>
+
+        <div id="subtitle"><p><b><font size="5">jsonフォーマット</font></b></p></div>
+
+        応答するjsonの図とサンプルを次に示します。
+
+        <table border="1" cellspacing="0" cellpadding="5" bordercolor="#333333">
+        <tr>
+        <th bgcolor="#eee8aa" width="100"><font color="#000000">Key</font></th>
+        <th bgcolor="#eee8aa" width="600"><font color="#000000">Value</font></th>
+        </tr>
+        <tr>
+        <td bgcolor="#99CC00" align="top" nowrap>path</td>
+        <td bgcolor="#FFFFFF" valign="top">ファイルのパスが応答されます。</td>
+        </tr>
+        <tr>
+        <td bgcolor="#99CC00" align="top" nowrap>violations</td>
+        <td bgcolor="#FFFFFF" valign="top">次の中で違反されているタイプの番号が応答されます。
+          但し、type5は本元で実装されていないため、応答されません。
+          <ul>
+            <li>type1は、1つのメソッドにつき，インデントは一段階とすること
+            <li>type2は、else句を使用しないこと
+            <li>type3は、すべてのプリイティブ型と文字列型をラップすること
+            <li>type4は、１行につき，ドットは１つまでにすること
+            <li><span style="text-decoration: line-through;">type5は、名前を省略しないこと</span>
+            <li>type6は、すべてのエンティティを小さくすること
+              <ul>
+                <li>1クラスは50行まで
+                <li>1メソッドは3行まで
+                <li>1つのパッケージには10ファイルまで
+              </ul>
+            <li>type7は、１つのクラスにつき，インスタンス変数は２つまでにすること
+            <li>type8はファーストクラスコレクションを使用すること
+            <li>type9はGetter，Setter，プロパティを使用しないこと
+          </ul>
+
+
+          <!--違反タイプの表-->
+          <table border="1" cellspacing="0" cellpadding="5" bordercolor="#333333">
+          <tr>
+          <th bgcolor="#eee8aa" width="50"><font color="#000000">Key</font></th>
+          <th bgcolor="#eee8aa" width="500"><font color="#000000">Value</font></th>
+          </tr>
+          <tr>
+          <td bgcolor="#99CC00" align="top" nowrap>type1</td>
+          <!-- <td bgcolor="#FFFFFF" valign="top"> -->
+          <td colspan="1" rowspan="6">違反されている行番号(line)とmessage（違反メッセージ）が表示されます。
+            但し、違反が複数ある場合はリストで応答されます。
+            <!--type1,2,3,4,7,8の表-->
+            <table border="1" cellspacing="0" cellpadding="5" bordercolor="#333333">
+            <tr>
+            <th bgcolor="#eee8aa" width="80"><font color="#000000">Key</font></th>
+            <th bgcolor="#eee8aa" width="350"><font color="#000000">Value</font></th>
+            </tr>
+            <tr>
+            <td bgcolor="#99CC00" align="top" nowrap>line</td>
+            <td bgcolor="#FFFFFF" valign="top">行番号が表示されます。</td>
+            </tr>
+            <tr>
+            <td bgcolor="#99CC00" align="top" nowrap>message</td>
+            <td bgcolor="#FFFFFF" valign="top">違反メッセージが表示されます。</td>
+            </tr>
+            </table>
+
+          </td>
+          </tr>
+
+          <tr>
+          <td bgcolor="#99CC00" align="top" nowrap>type2</td>
+          </tr>
+
+          <tr>
+          <td bgcolor="#99CC00" align="top" nowrap>type3</td>
+          </tr>
+
+          <tr>
+          <td bgcolor="#99CC00" align="top" nowrap>type4</td>
+          </tr>
+
+          <tr>
+          <td bgcolor="#99CC00" align="top" nowrap>type7</td>
+          </tr>
+
+          <tr>
+          <td bgcolor="#99CC00" align="top" nowrap>type8</td>
+          </tr>
+
+          <tr>
+          <td bgcolor="#99CC00" align="top" nowrap>type6</td>
+          <td bgcolor="#FFFFFF" valign="top">
+            <!--type6の表-->
+            違反されている行番号(line)とmessage（違反メッセージ）とsub_type（サブタイプ）が応答されます。
+              但し、違反が複数ある場合はリストで応答されます。
+            <table border="1" cellspacing="0" cellpadding="5" bordercolor="#333333">
+            <tr>
+            <th bgcolor="#eee8aa" width="80"><font color="#000000">Key</font></th>
+            <th bgcolor="#eee8aa" width="350"><font color="#000000">Value</font></th>
+            </tr>
+            <tr>
+            <td bgcolor="#99CC00" align="top" nowrap>line</td>
+            <td bgcolor="#FFFFFF" valign="top">行番号が応答されます。</td>
+            </tr>
+            <tr>
+            <td bgcolor="#99CC00" align="top" nowrap>message</td>
+            <td bgcolor="#FFFFFF" valign="top">違反メッセージが応答されます。</td>
+            </tr>
+            <tr>
+            <td bgcolor="#99CC00" align="top" nowrap>sub_type</td>
+            <td bgcolor="#FFFFFF" valign="top">
+              以下の違反に応じてサブタイプ(1〜3のいずれか)が応答されます。
+              但し、sub_type=3は本元で実装されていないため、応答されません。
+              <ul>
+                <li>「1クラスは50行まで」に違反している場合は1
+                <li>「1メソッドは3行まで」に違反している場合は2
+                <li><span style="text-decoration: line-through;">「1つのパッケージには10ファイルまで」に違反している場合は3</span>
+              </ul>
+            </td>
+            </tr>
+            </table>
+          </td>
+          </tr>
+
+          <tr>
+          <td bgcolor="#99CC00" align="top" nowrap>type9</td>
+          <td bgcolor="#FFFFFF" valign="top">
+            <!--type9の表-->
+            違反されている行番号(line)とmessage（違反メッセージ）とsub_type（サブタイプ）が応答されます。
+              但し、違反が複数ある場合はリストで応答されます。
+            <table border="1" cellspacing="0" cellpadding="5" bordercolor="#333333">
+            <tr>
+            <th bgcolor="#eee8aa" width="80"><font color="#000000">Key</font></th>
+            <th bgcolor="#eee8aa" width="350"><font color="#000000">Value</font></th>
+            </tr>
+            <tr>
+            <td bgcolor="#99CC00" align="top" nowrap>line</td>
+            <td bgcolor="#FFFFFF" valign="top">行番号が応答されます。</td>
+            </tr>
+            <tr>
+            <td bgcolor="#99CC00" align="top" nowrap>message</td>
+            <td bgcolor="#FFFFFF" valign="top">違反メッセージが応答されます。</td>
+            </tr>
+            <tr>
+            <td bgcolor="#99CC00" align="top" nowrap>sub_type</td>
+            <td bgcolor="#FFFFFF" valign="top">
+              以下の違反に応じてサブタイプ(1〜2のいずれか)が応答されます。
+              <ul>
+                <li>「Getterを使用しない」に違反している場合は1
+                <li>「Setterを使用しない」に違反している場合は2
+              </ul>
+            </td>
+            </tr>
+            </table>
+          </td>
+          </tr>
+
+
+          </table>
+
+
+
+
+
+
+
+        </td>
+        </tr>
+        </table>
+
+
+        <pre class="prettyprint">
+[
+  {
+    "path": "/test/Example.java",
+    "violations": {
+      "type6": [
+        {
+          "sub_type": 2,
+          "lines": 8,
+          "message": "method is too long (over 3 lines)."
+        }
+      ]
+    }
+  },
+  {
+    "path": "/test/Main.java",
+    "violations": {}
+  },
+  {
+    "path": "/test/testA/Example2.java",
+    "violations": {
+      "type1": [
+        {
+          "lines": 41,
+          "message": "indentation level is too much (more than 1 indent level)."
+        },
+        {
+          "lines": 50,
+          "message": "indentation level is too much (more than 1 indent level)."
+        },
+        {
+          "lines": 59,
+          "message": "indentation level is too much (more than 1 indent level)."
+        }
+      ],
+      "type3": [
+        {
+          "lines": 5,
+          "message": "no primitives."
+        },
+        {
+          "lines": 19,
+          "message": "no primitives."
+        },
+        {
+          "lines": 20,
+          "message": "no primitives."
+        },
+        {
+          "lines": 21,
+          "message": "no primitives."
+        }
+      ],
+      "type4": [
+        {
+          "lines": 43,
+          "message": "many dots per line (more than 1 dots)."
+        },
+        {
+          "lines": 61,
+          "message": "many dots per line (more than 1 dots)."
+        }
+      ],
+      "type6": [
+        {
+          "sub_type": 1,
+          "lines": 84,
+          "message": "source code is too long (over 50 lines)."
+        },
+        {
+          "sub_type": 2,
+          "lines": 41,
+          "message": "method is too long (over 3 lines)."
+        },
+        {
+          "sub_type": 2,
+          "lines": 50,
+          "message": "method is too long (over 3 lines)."
+        },
+        {
+          "sub_type": 2,
+          "lines": 59,
+          "message": "method is too long (over 3 lines)."
+        },
+        {
+          "sub_type": 2,
+          "lines": 69,
+          "message": "method is too long (over 3 lines)."
+        }
+      ],
+      "type7": [
+        {
+          "lines": 5,
+          "message": "field count is more than 2."
+        },
+        {
+          "lines": 19,
+          "message": "field count is more than 2."
+        },
+        {
+          "lines": 20,
+          "message": "field count is more than 2."
+        },
+        {
+          "lines": 21,
+          "message": "field count is more than 2."
+        }
+      ],
+      "type9": [
+        {
+          "sub_type": 1,
+          "lines": 41,
+          "message": "getter method found."
+        },
+        {
+          "sub_type": 1,
+          "lines": 50,
+          "message": "getter method found."
+        },
+        {
+          "sub_type": 1,
+          "lines": 59,
+          "message": "getter method found."
+        }
+      ]
+    }
+  },
+  {
+    "path": "/test/testA/Example6.java",
+    "violations": {
+      "type6": [
+        {
+          "sub_type": 2,
+          "lines": 15,
+          "message": "method is too long (over 3 lines)."
+        }
+      ]
+    }
+  },
+  {
+    "path": "/test/testB/Example3.java",
+    "violations": {
+      "type1": [
+        {
+          "lines": 7,
+          "message": "indentation level is too much (more than 1 indent level)."
+        }
+      ],
+      "type4": [
+        {
+          "lines": 18,
+          "message": "many dots per line (more than 1 dots)."
+        }
+      ],
+      "type6": [
+        {
+          "sub_type": 2,
+          "lines": 7,
+          "message": "method is too long (over 3 lines)."
+        }
+      ]
+    }
+  }
+]</pre>
+
+        <div id="subtitle"><p><b><font size="5">注意事項</font></b></p></div>
+        <ul>
+        <li>リクエストデータ、およびレスポンスデータのJSONフォーマットには、今後フィールドやキーなどが追加される場合があります。</li>
+        <li>拡張子がjavaでないものはjsonに反映されません。
+        </ul>
+
+      </div>
+      <!-- コンテンツ終了 -->
+
+      <!-- フッタ開始 -->
+      <div id="footer">
+        <p><b><font size="5">9rules on the Webへ</font></b></p>
+        <A Href="validator.html">コチラ</A>をクリックすると、9rules on the Webのページに遷移します。
+      </div>
+      <!-- フッタ終了 -->
+    </div>
+    <!-- コンテナ終了 -->
+
+  </body>
+</html>
