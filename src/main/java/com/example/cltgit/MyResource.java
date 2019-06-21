@@ -49,6 +49,18 @@ import java.io.IOException;
 public class MyResource {
 
 	@GET
+	@Path("test/")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response test() throws IOException {
+		
+		
+		
+		Map<String, Object> map = new HashMap<>();
+		map.put("ok", "false");
+		return Response.status(200).entity(map).header("Access-Control-Allow-Origin", "*").build();
+	}
+
+	@GET
 	@Path("list/{account}/{repository}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getList(@PathParam("account") String accountName, @PathParam("repository") String repositoryName)
@@ -109,7 +121,7 @@ public class MyResource {
 
 		Integer violationCount = nineRulesRun(accountName, repositoryName, new Json(fileContentList), targetPath);
 
-		insertDataBase(accountName, repositoryName, violationCount, fileContentList,targetPath);
+		insertDataBase(accountName, repositoryName, violationCount, fileContentList, targetPath);
 
 		String currentPath = new File(".").getAbsoluteFile().getParent();
 		System.out.println("currentPath= " + currentPath);
@@ -118,7 +130,7 @@ public class MyResource {
 		System.out.println("webBaseDirectory= " + webBaseDirectory);
 
 		setPersonalDirectory(currentPath, webBaseDirectory, accountName, repositoryName);
-		setToBadge(currentPath, webBaseDirectory, violationCount, accountName, repositoryName);
+		
 		setToWebPage(currentPath, webBaseDirectory, violationCount, accountName, repositoryName);
 
 		Map<String, String> map = new HashMap<>();
@@ -153,7 +165,7 @@ public class MyResource {
 	}
 
 	void insertDataBase(String accountName, String repositoryName, Integer violationCount,
-			List<Map<String, Object>> fileContentList,String targetPath) throws UnknownHostException {
+			List<Map<String, Object>> fileContentList, String targetPath) throws UnknownHostException {
 		// MongoDBサーバに接続
 		MongoClient mongoClient = new MongoClient("localhost", 27017);
 		// 利用するDBを取得
@@ -163,10 +175,8 @@ public class MyResource {
 
 		DBObject query = new BasicDBObject("repository", accountName + "/" + repositoryName);
 		BasicDBObject doc = new BasicDBObject("repository", accountName + "/" + repositoryName)
-				.append("build_no", coll.find(query).count() + 1)
-				.append("date", "ISODate(" + new Date() + ")")
-				.append("target_path", targetPath)
-				.append("violation_count", violationCount)
+				.append("number", coll.find(query).count() + 1).append("date", "ISODate(" + new Date() + ")")
+				.append("target_path", targetPath).append("violation_count", violationCount)
 				.append("concrete", fileContentList);
 		coll.insert(doc);
 
@@ -187,7 +197,7 @@ public class MyResource {
 	}
 
 	void setToWebPage(String currentPath, String webBaseDirectory, Integer violationCount, String accountName,
-			String repositoryName) {
+			String repositoryName) throws IOException {
 		String setFilePath = currentPath + "/" + webBaseDirectory + "/webapp/" + accountName + "/" + repositoryName;
 
 		Utility.fileMove(currentPath + "/view_file/webpage/index.html", setFilePath + "/index.html");
@@ -195,18 +205,22 @@ public class MyResource {
 		Utility.fileMove(currentPath + "/view_file/webpage/json2html.js", setFilePath + "/json2html.js");
 		Utility.fileMove(currentPath + "/view_file/webpage/myscript.js", setFilePath + "/myscript.js");
 		Utility.fileMove(currentPath + "/view_file/webpage/style.css", setFilePath + "/style.css");
+		setToBadge(currentPath, webBaseDirectory, violationCount, accountName, repositoryName);
 	}
 
 	void setToBadge(String currentPath, String webBaseDirectory, Integer violationCount, String accountName,
-			String repositoryName) {
+			String repositoryName) throws IOException {
 		String setToBadgePath = currentPath + "/" + webBaseDirectory + "/webapp/" + accountName + "/" + repositoryName
-				+ "/badge.png";
-
-		if (violationCount == 0) {
-			Utility.fileMove(currentPath + "/view_file/badge/1.png", setToBadgePath);
-		} else {
-			Utility.fileMove(currentPath + "/view_file/badge/2.png", setToBadgePath);
-		}
+				+ "/badge.svg";
+		
+		new DownloadAndSave().perform(violationCount,setToBadgePath);
+		
+		
+		//if (violationCount == 0) {
+		//	Utility.fileMove(currentPath + "/view_file/badge/1.png", setToBadgePath);
+		//} else {
+		//	Utility.fileMove(currentPath + "/view_file/badge/2.png", setToBadgePath);
+		//}
 	}
 
 	String getWebBaseDirectory() {
