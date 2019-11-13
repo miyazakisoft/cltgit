@@ -59,6 +59,14 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver
 	compile group: 'org.mongodb', name: 'mongo-java-driver', version: '2.12.3'
 
+	// https://mvnrepository.com/artifact/org.json/json
+	compile group: 'org.json', name: 'json', version: '20180813'
+	
+
+
+	// https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient
+	compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.2.1'
+	
 	
 }
 
@@ -87,4 +95,25 @@ task deploy(type: Copy, dependsOn: war) {
 	setGroup('build')
 	from 'build/libs'
 	into '/Users/kou/Desktop/9.4.11.v20180605/libexec/webapps'
+	
+
 }
+
+
+/*
+ant.condition(property: "os", value: "windows") { os(family: "windows") }
+ant.condition(property: "os", value: "unix" ) { os(family: "unix") }
+
+task execCommandLine(type:Exec) {
+    switch(ant.properties.os){
+        case 'windows':
+            commandLine 'cmd', '/c', 'echo', 'hello'
+            break
+        case 'unix':
+           	commandLine 'sh', '/Users/kou/Desktop/pushBullet.sh'
+            break
+    }
+}
+*/
+
+

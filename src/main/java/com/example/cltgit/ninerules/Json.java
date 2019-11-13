@@ -20,6 +20,11 @@ public class Json{
         super();
         this.fileContentList = aFileContentList;
     }
+    
+    public List<Map<String,Object>> getFileContentList() {
+    	return fileContentList;
+    }
+    
 
     public void create(List<String> resultList,String filePath){
         this.addFileContentList(resultList,this.fileContentList,filePath);
