@@ -1,4 +1,4 @@
-package com.example.cltgit;
+package com.github.pony;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,13 +20,16 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
-public class GitOperation {
+public class GitHubOperation {
 
 	// String url = "https://github.com/miyazakisoft/Putu.git";
 
-	public void perform(String ownerName, String repositoryName, String branchName,String randamDirectory) {
+	public void perform(String projectName, String branchName, String randamDirectory) {
 		// this.gitClone(ownerName, repositoryName);
 		// this.gitCheckout(ownerName, repositoryName, branchName);
+		String ownerName = projectName.split("/")[0];
+		String repositoryName = projectName.split("/")[1];
+		
 
 		try {
 			Repository localRepo = new FileRepository("./" + repositoryName + "/" + Constants.DOT_GIT);
@@ -36,7 +39,8 @@ public class GitOperation {
 
 				git.cloneRepository()
 						.setURI("https://github.com/" + ownerName + "/" + repositoryName + Constants.DOT_GIT)
-						.setDirectory(new File("./git_project/" + randamDirectory + "/" + ownerName + "/" + repositoryName))
+						.setDirectory(
+								new File("./github_project/" + randamDirectory + "/" + ownerName + "/" + repositoryName))
 						.setBranchesToClone(Arrays.asList("refs/heads/" + branchName))
 						.setBranch("refs/heads/" + branchName).call();
 			}
@@ -56,7 +60,7 @@ public class GitOperation {
 				// . git clone
 				git.cloneRepository()
 						.setURI("https://github.com/" + ownerName + "/" + repositoryName + Constants.DOT_GIT)
-						.setDirectory(new File("./git_project/" + ownerName + "/" + repositoryName)).call();
+						.setDirectory(new File("./github_project/" + ownerName + "/" + repositoryName)).call();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -68,7 +72,7 @@ public class GitOperation {
 		FileRepositoryBuilder repositoryBuilder = new FileRepositoryBuilder();
 		Repository repository = null;
 		try {
-			repository = repositoryBuilder.setGitDir(new File("./git_project/Putu/" + Constants.DOT_GIT))
+			repository = repositoryBuilder.setGitDir(new File("./github_project/Putu/" + Constants.DOT_GIT))
 					.readEnvironment().findGitDir().setMustExist(true).build();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

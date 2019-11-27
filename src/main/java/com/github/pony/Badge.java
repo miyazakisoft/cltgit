@@ -1,56 +1,57 @@
-package com.example.cltgit;
+package com.github.pony;
 
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Paths;
 
-public class DownloadAndSave {
+public class Badge {
+	String ownerName;
+	String repositoryName;
+	String branchName;
+	String setToBadgePath;
 
-	public void perform(Integer totalNumberOfViolations, Long lineOfCode, String setToBadgePath) throws IOException {
+	Badge(String ownerName, String repositoryName, String branchName) {
+		this.ownerName = ownerName;
+		this.repositoryName = repositoryName;
+		this.branchName = branchName;
+		this.setToBadgePath = Paths.get(new Web(ownerName, repositoryName).targetPath(), branchName + "-badge.svg")
+				.toString();
+	}
+
+	Badge(String ownerName, String repositoryName) {
+		this(ownerName, repositoryName, "master");
+	}
+
+	public void perform() throws IOException {
+
+		Double score = Double.parseDouble(DataBase.getRecentContent(ownerName, repositoryName, branchName, "score"));
 
 		String color = "red";
-		String rank = "F";
 
-		System.out.println("totalNumberOfViolations: " + totalNumberOfViolations);
-		System.out.println("lineOfCode: " + lineOfCode);
-
-		Double complianceRate;
-		if (totalNumberOfViolations == 0) {
-			complianceRate = 100.0;
-		} else {
-			complianceRate = (100 - (((double) totalNumberOfViolations / lineOfCode) * 100));
-		}
-
-		if (complianceRate == 100.0) {
+		if (score == 100.0) {
 			color = "brightgreen";
-			rank = "A";
-		} else if (complianceRate >= 98.0) {
+
+		} else if (score >= 98.0) {
 			color = "green";
-			rank = "B";
-		} else if (complianceRate >= 95.0) {
+
+		} else if (score >= 95.0) {
 			color = "yellowgreen";
-			rank = "C";
-		} else if (complianceRate >= 90.0) {
+
+		} else if (score >= 90.0) {
 			color = "yellow";
-			rank = "D";
-		} else if (complianceRate >= 85.0) {
+
+		} else if (score >= 85.0) {
 			color = "orange";
-			rank = "E";
+
 		}
 
-		System.out.println("遵守率: " + String.format("%.1f", complianceRate));
+		System.out.println("遵守率: " + String.format("%.1f", score));
 
-		URL url = new URL("https://img.shields.io/badge/compliance-" + rank + "-" + color
+		URL url = new URL("https://img.shields.io/badge/compliance-" + score + "%25-" + color
 				+ ".svg?logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAfCAMAAADHso01AAAABGdBTUEAALGPC/"
 				+ "xhBQAAAAFzUkdCAK7OHOkAAAFBUExURUdwTDWbvx+WvyaZwCCXvx2WviGYvx2Wvh+WviyawCGXvyubwCqZvyeawCCWvy"
 				+ "KYwB+Wvh6WviGYvx+WvzudwCOYwB6WviKYwB6WviaZwCubwTSdwiKYwCOXvyGYvySZwCSZwSGYwCmawSCXvyCXvyGXvy"

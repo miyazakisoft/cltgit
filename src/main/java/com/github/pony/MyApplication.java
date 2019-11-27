@@ -1,4 +1,4 @@
-package com.example.cltgit;
+package com.github.pony;
 
 import javax.ws.rs.ApplicationPath;
 
@@ -9,6 +9,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 public class MyApplication extends ResourceConfig{
 	public MyApplication() {
 		super(MultiPartFeature.class);
-		packages("com.example.cltgit");
+		packages("com.github.pony");
 	}
 }

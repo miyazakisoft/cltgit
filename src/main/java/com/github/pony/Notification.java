@@ -1,4 +1,4 @@
-package com.example.cltgit;
+package com.github.pony;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -11,13 +11,20 @@ import java.net.URL;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
+
 public class Notification {
 
-	public String postJson(String json, String path,String accessToken) {
+	public String postJson(String json, String path, String accessToken) {
 		HttpURLConnection uc;
 		try {
 			URL url = new URL("https://api.github.com/" + path);
@@ -49,6 +56,24 @@ public class Notification {
 		}
 	}
 
+
+	public String getBranchList(String ownerName, String repositoryName) throws IOException {
+		String body = "";
+		String url = "https://api.github.com/repos/" + ownerName + "/" + repositoryName + "/branches?access_token="
+				+ DataBase.getDataBaseToken(ownerName);
+		try {
+			CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+			HttpGet request = new HttpGet(url);
+			request.addHeader("content-type", "application/json");
+			HttpResponse result = httpClient.execute(request);
+			body = EntityUtils.toString(result.getEntity(), "UTF-8");
+		} catch (IOException ex) {
+			System.out.println(ex.getStackTrace());
+		}
+
+		return body;
+	}
+
 	public String getAccessToken(String code, String clientId, String clientSecret) {
 		HttpURLConnection uc;
 		try {
@@ -75,38 +100,6 @@ public class Notification {
 		} catch (IOException e) {
 			e.printStackTrace();
 			return "client - IOException : " + e.getMessage();
-		}
-	}
-
-	public void callVarnish(String url) {
-
-		DefaultHttpClient httpclient = new DefaultHttpClient();
-		HttpPurge httpPurge = new HttpPurge(url);
-		Header header = new BasicHeader("Host", "camo.githubusercontent.com");
-		httpPurge.setHeader(header);
-		try {
-			HttpResponse response = httpclient.execute(httpPurge);
-			System.out.print("-------------------------------------");
-			System.out.println(response.getStatusLine());
-			System.out.print("-------------------------------------");
-			HttpEntity entity = response.getEntity();
-			// If the response does not enclose an entity, there is no need
-			// to worry about connection release
-			if (entity != null) {
-				// do something useful with the response body
-				// and ensure it is fully consumed
-				EntityUtils.consume(entity);
-			}
-		} catch (IOException ex) {
-
-			// In case of an IOException the connection will be released
-			// back to the connection manager automatically
-		} catch (RuntimeException ex) {
-
-			// In case of an unexpected exception you may want to abort
-			// the HTTP request in order to shut down the underlying
-			// connection and release it back to the connection manager.
-			httpPurge.abort();
 		}
 	}
 
